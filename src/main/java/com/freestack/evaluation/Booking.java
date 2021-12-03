@@ -12,9 +12,11 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-
+    @Column(name = "end_of_the_booking")
     private LocalDateTime endofthebooking;
+    @Column(name = "evaluation")
     private Integer evaluation;
+    @Column(name = "start_of_the_booking")
     private LocalDateTime startofthebooking;
 
     @ManyToOne
@@ -25,6 +27,10 @@ public class Booking {
     @ManyToOne
     @JoinColumn(name = "uberuser_id")
     private UberUser uberUser;
+
+    public Booking() {
+
+    }
 
     public UberUser getUberUser() {
         return uberUser;

@@ -6,14 +6,15 @@ public class Main {
 
     public static void main(String[] args) {
 
-        UberUser uberUser = new UberUser("joe", "bah");
-        UberApi.enrollUser(uberUser);
-
+       UberUser uberUser = new UberUser("joe", "bah");
+       UberApi.enrollUser(uberUser);
         UberUser uberUser2 = new UberUser("joe", "bee");
         UberApi.enrollUser(uberUser2);
 
         UberDriver uberDriver = new UberDriver("jane", "dee");
-        UberApi.enrollDriver(uberDriver);
+       UberApi.enrollDriver(uberDriver);
+
+
 
         Booking booking1 = UberApi.bookOneDriver(uberUser);
         if (booking1 == null) throw new AssertionError("uberDriver should be found available");
@@ -27,9 +28,9 @@ public class Main {
         UberApi.evaluateDriver(booking1, evaluationOfTheUser);
 
         List<Booking> bookings = UberApi.listDriverBookings(uberDriver);
-        if (bookings.size() != 2) throw new AssertionError();
-       // if (!bookings.get(0).getScore().equals(evaluationOfTheUser)) throw
-        // new AssertionError();
+        if (bookings.size() != 1) throw new AssertionError();
+        if (!bookings.get(0).getEvaluation().equals(evaluationOfTheUser)) throw
+      new AssertionError();
 
         Booking booking3 = UberApi.bookOneDriver(uberUser2);
         if (booking3 == null) throw new AssertionError("uberDriver should be now available");

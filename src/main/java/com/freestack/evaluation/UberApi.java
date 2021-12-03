@@ -1,11 +1,9 @@
 package com.freestack.evaluation;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import javax.persistence.TypedQuery;
+import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class UberApi {
@@ -20,7 +18,8 @@ public class UberApi {
 
             entityManager.getTransaction().begin();
             UberUser uberUserToEnroll = uberUser;
-            entityManager.persist(uberUserToEnroll);
+            entityManager.persist(uberUser);
+            entityManager.getTransaction().commit();
 
         } finally {
             entityManager.close();
@@ -45,35 +44,33 @@ public class UberApi {
     }
 
     public static Booking bookOneDriver(UberUser uberUser) {
-        // s'il y a un driver de libre
-        EntityManager entityManager = EntityManagerFactorySingleton
+
+       EntityManager entityManager = EntityManagerFactorySingleton
                 .getInstance().createEntityManager();
-        try {
+
+       List<UberDriver> uberDriverList = (List<UberDriver>) entityManager
+       .createQuery
+       ("SELECT u From UberDriver u WHERE u.available = true").getResultList();
+
+
+        if (uberDriverList.size() > 0) {
             entityManager.getTransaction().begin();
+            UberDriver driver = uberDriverList.get(0);
             Booking booking = new Booking();
             booking.setUberUser(uberUser);
             booking.setStartofthebooking(LocalDateTime.now());
-
-            TypedQuery<UberDriver> allDriver = entityManager.createQuery(
-                    "select " +
-                            "u from UberDriver u ", UberDriver.class);
-
-            List<UberDriver> uberDriverList = allDriver.getResultList();
-
-            for (UberDriver driver : uberDriverList) {
-                if (driver.getAvailable().equals(true)) {
-                    booking.setUberDriver(driver);
-                    driver.setAvailable(false);
-                    break;
-                }
-            }
+            booking.setUberDriver(driver);
+            driver.setAvailable(false);
             entityManager.persist(booking);
-            entityManager.getTransaction().commit();
-            return booking;
+            entityManager.merge(driver);
 
-        } finally {
+            entityManager.getTransaction().commit();
             entityManager.close();
-        }
+            return booking;
+        } else
+            return null;
+
+
 
     }
 
@@ -84,7 +81,8 @@ public class UberApi {
             entityManager.getTransaction().begin();
             booking.setEndofthebooking(LocalDateTime.now());
             booking.getUberDriver().setAvailable(true);
-            entityManager.persist(booking);
+            entityManager.merge(booking);
+            entityManager.merge(booking.getUberDriver());
             entityManager.getTransaction().commit();
 
         } finally {
@@ -100,7 +98,7 @@ public class UberApi {
         try {
             entityManager.getTransaction().begin();
             booking.setEvaluation(evaluation);
-            entityManager.persist(booking);
+            entityManager.merge(booking);
             entityManager.getTransaction().commit();
 
         } finally {
@@ -130,8 +128,7 @@ public class UberApi {
                 }
             }
             return bookingList;
-            //entityManager.persist(bookingList);
-            // entityManager.getTransaction().commit();
+
 
         } finally {
             entityManager.close();
@@ -150,42 +147,36 @@ public class UberApi {
             List<Booking> unfinishedBookingList = new ArrayList<>();
 
             TypedQuery<Booking> allBooking = entityManager.createQuery(
-                    "select " +
-                            "b from Booking b ", Booking.class);
+                    "SELECT b FROM Booking b WHERE b.endofthebooking IS NULL",
+                    Booking.class);
 
-            List<Booking> bookingList = allBooking.getResultList();
+            unfinishedBookingList = allBooking.getResultList();
 
-            for (Booking booking : bookingList) {
-                if (booking.getEndofthebooking().equals(null)) {
-                    unfinishedBookingList.add(booking);
 
-                }
-            }
             return unfinishedBookingList;
 
         } finally {
+
             entityManager.close();
         }
 
     }
 
-    public static Integer meanScore(UberDriver uberDriver) {
+    public static float meanScore(UberDriver uberDriver) {
         EntityManager entityManager = EntityManagerFactorySingleton
                 .getInstance().createEntityManager();
         try {
             entityManager.getTransaction().begin();
-            List<Booking> listDriverBookingsMeanScore =
-                    listDriverBookings(uberDriver);
-            Integer meanScoreToFind = 0;
-            Integer numberOfEval = 0;
+            Query queryDriver = entityManager.createQuery("SELECT AVG(b" +
+                    ".evaluation) FROM Booking b WHERE b.uberDriver= " +
+                    ":uberdriver");
 
-            for (Booking booking : listDriverBookingsMeanScore) {
-                meanScoreToFind += booking.getEvaluation();
-                numberOfEval++;
-            }
-            meanScoreToFind = meanScoreToFind / numberOfEval;
+            queryDriver.setParameter("uberdriver", uberDriver);
+            Double meanScoreToFind = (Double)queryDriver.getSingleResult();
+            float meanScoreToFindInFloat = meanScoreToFind.floatValue();
 
-            return meanScoreToFind;
+            entityManager.getTransaction().commit();
+            return meanScoreToFindInFloat;
 
         } finally {
             entityManager.close();

@@ -10,17 +10,18 @@ public class UberUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
+    @Column(name = "fisrtname")
     private String firstname;
+    @Column(name = "lastname")
     private String lastname;
+
 
     public UberUser(String firstname, String lastname) {
         this.firstname = firstname;
         this.lastname = lastname;
     }
 
-    private static List<UberUser> uberUserList= new ArrayList();
-
+    public UberUser(){}
 
 
     public Integer getId() {

@@ -8,9 +8,11 @@ public class UberDriver {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
+    @Column(name = "available")
     private Boolean available;
+    @Column(name = "fisrtname")
     private String firstname;
+    @Column(name = "lastname")
     private String lastname;
 
     public UberDriver(){
@@ -19,6 +21,8 @@ public class UberDriver {
     public UberDriver(String firstname, String lastname) {
         this.firstname = firstname;
         this.lastname = lastname;
+        this.available = true;
+
     }
 
     public Integer getId() {
