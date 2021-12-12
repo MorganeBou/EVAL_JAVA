@@ -48,12 +48,10 @@ public class UberApi {
        EntityManager entityManager = EntityManagerFactorySingleton
                 .getInstance().createEntityManager();
 
-       List<UberDriver> uberDriverList = (List<UberDriver>) entityManager
-       .createQuery
-       ("SELECT u From UberDriver u WHERE u.available = true").getResultList();
-
-
-        if (uberDriverList.size() > 0) {
+        List<UberDriver> uberDriverList = (List<UberDriver>) em.createQuery("SELECT u From UberDriver u WHERE u.available = true")
+            .setMaxResults(1).getResultList();
+        
+        if (!uberDriverList.isEmpty()) {
             entityManager.getTransaction().begin();
             UberDriver driver = uberDriverList.get(0);
             Booking booking = new Booking();
@@ -112,24 +110,10 @@ public class UberApi {
         EntityManager entityManager = EntityManagerFactorySingleton
                 .getInstance().createEntityManager();
         try {
-            entityManager.getTransaction().begin();
-            List<Booking> driverBookingList = new ArrayList<>();
-
-            TypedQuery<Booking> allBooking = entityManager.createQuery(
-                    "select " +
-                            "b from Booking b ", Booking.class);
-
-            List<Booking> bookingList = allBooking.getResultList();
-
-            for (Booking booking : bookingList) {
-                if (booking.getUberDriver().equals(uberDriver)) {
-                    driverBookingList.add(booking);
-
-                }
-            }
-            return bookingList;
-
-
+            return  (List<Booking>) em.createQuery("SELECT b FROM Booking b where b.uberDriver = :uberDriver")
+            .setParameter("uberDriver", uberDriver)
+            .getResultList();
+            
         } finally {
             entityManager.close();
         }
